@@ -6,4 +6,4 @@
 Rivtto の 学习之旅
 
 [<<指南](guide)
-[<<回到封面](_coverpage)
+[<<回到封面](https://rivtto.github.io/rivtto/)
