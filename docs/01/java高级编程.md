@@ -188,7 +188,7 @@ ArrayList类功能是基于数组的数据结构实现
 ArrayList集合的特点
 
 ```
-1、基于数组实现的额，具备了数组所有的优点
+1、基于数组实现的，具备了数组所有的优点
 2、动态扩容 
 3、随机查找速度非常快（基于下标访问的），随机插入非常慢，如果插入的index非常靠前，那么后面的每一个元素都要为前一个元素腾出位置来
 ```
@@ -227,7 +227,7 @@ coll.indexOf("666")；
 
 
 
-拓展：System.arraycopy（），System类的arraycopy方法，实现指定范围拷贝u共5个参数：
+拓展：System.arraycopy（），System类的arraycopy方法，实现指定范围拷贝，共5个参数：
 
 ```
 System.arraycopy(data, index + 1, data, index, (size - index - 1));
@@ -565,6 +565,184 @@ try {
         }
         System.out.println(1);
 ~~~
+
+这样我们就会发现，程序就会跳过出现异常的那一部分，进而执行catch里面的语句，我们可以理解为不执行错误语句，转而执行错误的提示或者补偿语句。
+
+try  catch语句是自己处理错误
+
+
+
+### 3.4异常处理之throw
+
+throw我们称之为抛出异常，利用try  catch抓住可能出现异常的语句，然后不在catch中写异常的处理，而是写抛出异常，让方法的执行者处理。
+
+~~~java
+ public static void main(String[] args) {
+    math();
+    }
+
+    private static void math() {
+        try {
+            System.out.println(10/0);
+        }catch(Exception e){
+            throw new RuntimeException();
+        }
+    }
+~~~
+
+这里便是一个典型的抛出异常，语法上没有任何问题，但是我们稍加修改：
+
+~~~java
+ public static void main(String[] args) {
+    math();
+    }
+
+    private static void math() {
+        try {
+            System.out.println(10/0);
+        }catch(Exception e){
+            throw new Exception();
+        }
+    }
+~~~
+
+这里却出现了语法上的报错，这是为什么呢？
+
+可以看到两份代码唯一出现的不同，就是throw后面抛出的异常名称不同。
+
+这里我们就回到开头介绍的异常分类Exception 和 RuntimeException的不同， RuntimeException我们语法上认为这是不严重的异常，就算把他抛出给方法调用者，不处理，也不会语法报错
+
+而Exception是严重错误，一定需要处理！
+
+~~~java
+public static void main(String[] args) {
+        try {
+            math();
+        }catch (Exception e){
+            System.out.println("运算出错");
+        }
+    
+    }
+
+    private static void math() throws Exception{
+        try {
+            System.out.println(10/0);
+        }catch(Exception e){
+            throw new Exception();
+        }
+    }
+~~~
+
+这是处理后的代码，可以看到，在main方法调用时，处理了异常语法并没有报错。
+
+同时，在math计算方法后面，添加了throws Exception的标识语句（throws 不是throw），这是严重异常方法，需要抛出异常的标识，让调用者知道调用方法需要处理。
+
+### 3.5自定义异常
+
+我们进入JDK底层代码，可以发现Exception类基本没有实现异常类独有方法属性，只有一个空壳，我们可以了解到，异常重要的只是一个名字，起提示作用，所以我们也可以写出异常类，继承异常主要父类Exception即可起到作用：
+
+~~~java
+class ChuShuException extends Exception{
+    public ChuShuException(){
+        super();
+    }
+    public ChuShuException(String msg){
+        super(msg);
+    }
+}
+~~~
+
+这里可以看到，我们自定义了一个除数异常类，那么我们应该怎么使用它呢？
+
+~~~java
+public static void main(String[] args) {
+        try {
+           math(0);
+        }catch (Exception e){
+           e.printStackTrace();
+        }
+
+    }
+
+    private static void math(int chuShu) throws ChuShuException{
+       int a = 20;
+       if (chuShu == 0){
+           throw new ChuShuException("除数为0");
+       }else{
+           System.out.println(a/chuShu);
+       }
+    }
+~~~
+
+当我们运行时，打印出来的错误便是ChuShuException和提示”除数为0”。
+
+e.printStackTrace()的意思是，打印出栈内触发的警告，也就是我们触发的异常。
+
+
+
+## 4、IO流
+
+### 4.1IO流的介绍
+
+IO流的概念：在程序中数据，我们要读取，转移数据到另一个地方，我们使用的是一种被称之为“流”的传输技术，可理解为，复制粘贴之类操作的细节过程。
+
+就是把文件细化成一段段数据，进行传输
+
+![1658492582865](D:\桌面\rivtto\docs\01\插图\1658492582865.png)
+
+
+
+可以看到IO流的知识点非常多，但是以后的开发中，我们会使用各种帮助类实现IO流的操作，所以我们只需要了解IO流实现的原理即可。
+
+### 4.2File类
+
+这个类表示操作系统上的文件或者目录实例，可以用这个类操作文件。
+
+实例语法
+
+~~~java
+ File file = new File("D:/IO/text.txt"); //括号内是一个文件的路径
+~~~
+
+我们定位文件路径的有两种路径，一种是相对路径，一种是绝对路径。
+
+相对路径：是指对于当前位置的路径。
+
+绝对路径：是磁盘上完整的路径。
+
+通过以上实例化语句，我们可以通过file来操作"D:/IO/text.txt"文件。
+
+~~~java
+file.isFile()；//判断是否为文件，返回值为布尔类型
+    
+file.isDirectory()//判断是否为文件夹（目录），返回值为布尔类型
+
+file.getAbsolutePath()//取得文件绝对路径
+
+file.delete()//删除该文件
+~~~
+
+File类的操作还有很多，这里不一一列举，可以查看API文档了解。
+
+### 4.3字节流
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
