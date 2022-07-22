@@ -1,4 +1,4 @@
-# java高级编程
+#                                                                                                                                                                                                                                                                                    java高级编程
 
 ## 1、常用API类型
 
@@ -298,6 +298,10 @@ Map集合是双列集合顶点，由key和value组成。
 
 Map接口的集合可理解为由两组数据组成，一组为key，一组为value，key的作用相当于数组的下标，value的作用相当于数组的值。
 
+
+
+
+
 ### 2.7HashMap集合实现类
 
 这是一个基于Map接口实现的集合实现类：
@@ -337,9 +341,17 @@ Set keySet()：获取所有的value值，但是返回的是一个Set对象
 Set set = map.keySet();
 ~~~
 
-map.containsKey("xjp"))：判断是否包含指定的key（不演示）
+map.containsKey("xjp"))：判断是否包含指定的key
 
-map.containsValue("中国") :判断是否包含指定的value （不演示）
+~~~java
+（不演示）
+~~~
+
+map.containsValue("中国") :判断是否包含指定的value 
+
+~~~java
+（不演示）
+~~~
 
  Collection values():获取集合内所有的Value，但是返回的是Collection对象
 
@@ -353,13 +365,206 @@ Collection coll = map.values();
 Set set = map.entrySet();
 ~~~
 
-•boolean containsKey(Object key) 
+boolean containsKey(Object key) ：查找是否包含该key值，返回布尔类型
 
-•boolean containsValue(Object value) 
+~~~java
+map.containsKey("4");
+~~~
 
-•V remove(Object key) 
+boolean containsValue(Object value) 
 
-•int size( 
+~~~java
+(同上，不再演示)
+~~~
+
+remove(Object key) ：移除数据，返回泛型，（返回所移除的数据）
+
+~~~java
+(同上，不再演示)
+~~~
+
+int size( ）：获取集合长度，返回int
+
+~~~jav
+map.size();
+~~~
+
+
+
+### 2.8HashSet实现类 
+
+这是一个基于Set接口的集合实现类
+
+具体关系为Collection——>Set——>HashSet
+
+（Set特点：不能存放同一个元素）
+
+——————————————————————————————————————————————————
+
+HashSet特点：1、无序性
+
+​			  2、不可重复（相当于HashMap中key值的特点）
+
+——————————————————————————————————————————————————
+
+常用方法与ArrayList相同，不多赘述。
+
+
+
+——————————————————————————————————————————————————
+
+多用于去重实现
+
+实例：
+
+~~~java
+static String[] duplicatedPlus (String[] arr) {       
+    // 首先把数组转换成Collection    
+    List<String> list = Arrays.asList(arr);  
+    // HashSet 把所有的元素依次放入 
+    Set<String> set = new HashSet<>(list);
+	return  set.toArray(new String[0]);
+~~~
+
+### 2.9LinkedHashSet实现类 、TreeSet实现类 、HashTable 实现类
+
+![1658394893964](D:\桌面\rivtto\docs\01\插图\1658394893964.png)
+
+
+
+
+
+![1658394961736](D:\桌面\rivtto\docs\01\插图\1658394961736.png)
+
+
+
+由以上两图片，可以得出各个实现类与其接口、父类关系。
+
+我们也可以有图片，得到这三大实现类特点：
+
+
+
+——————————————————————————————————————————————————
+
+LinkedHashSet实现类：
+
+由图可知，他有linked类，HashSet类的特点
+
+1、有序      
+
+2、数值唯一   
+
+
+
+常用方法和父接口相同
+
+——————————————————————————————————————————————————
+
+
+
+TreeSet类 TreeSet特点：
+
+1、⽆序(但是有字典顺序) 
+
+2、⽆下标 
+
+3、不可重复 
+
+常⽤⽅法 与 HashSet 类的⽅法⼀致 
+
+特点： 使⽤ TreeSet 集合存储对象的时候，对象必须要实现Comparable接⼝ 
+
+实现原理 TreeSet 在存储元素的时候，会调⽤ compareTo ⽅法。两个作⽤： 
+
+1、排序: 返回值⼤于0升序，返回值⼩于0降序 
+
+2、去重(返回值为0) TreeSet 认为返回0，两个对象就是相同 
+
+——————————————————————————————————————————————————
+
+HashTable Hashtable常⽤⽅法与HashMap⼀致
+
+ HashMap与Hashtable区别： 
+
+1、Hashtable是线程安全的，HashMap是线程不安全的 
+
+2、Hashtable中不允许存储null作为key和value，⽽HashMap可以 在实际开发中⼀般都是⽤HashMap。考虑线程安全使⽤ConCurrentHashMap 
+
+### 额外知识点：
+
+Collections⼯具类 
+
+集合： ⼯具类(Collections) 
+
+Collections.reverse(List list)：反序，将集合的顺序调换
+
+~~~java
+Collections.reverse(coll);
+~~~
+
+Collections.shuffle(List list)：打乱顺序，将集合数据的顺序打乱
+
+~~~java
+Collections.shuffle(coll);
+~~~
+
+Collections.sort(List list) ：排序，按数据首位ascii码，从大到小排列
+
+~~~java
+Collections.sort(coll);
+~~~
+
+——————————————————————————————————————————————————
+
+泛型概括：
+
+将某一数据类型用  <字母>  表示，意为该类型可变，当你调用用泛型修饰的类、接口、方法时，可在<>中输入某一固定的数据类型，表示该泛型限制为输入的数据类型。
+
+
+
+## 3、异常
+
+### 3.1异常的概念
+
+异常是在程序执行时出现的错误，我们分为两类：
+
+一类是error：这是开发人员无法处理的错误，也不需要我们处理，可理解为javaJDK的错误。
+
+一类是Exception：这就是我们所说的异常，是可以被处理掉的，我们应该学习的东西。
+
+这两类的出现都会导致JVM终止，使得程序无法继续下去。
+
+### 3.2异常的分类
+
+我们把所有的异常都归为两类：
+
+一是RuntimeException：这是表示运行时错误，也理解为，不太致命的异常
+
+另一是Exception：除去RuntimeException异常的其他都归为这一类。
+
+这两类都是Throwable类的子类。
+
+### 3.3异常的处理之try   catch
+
+假如我们执行如下语句：
+
+~~~java
+System.out.println(3/0);
+System.out.println(1);
+~~~
+
+我们知道除数是不可以为0的，所以这就是一个异常。当JVM逐句执行到这里时，就会出现错误警告，终止程序，这一句后面的语句无法执行。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+
+那么我们要做的就是，处理这个异常，就算它出现这个错误，我们也要让程序继续执行，并给出提示，我们就会用到try   catch语句处理
+
+~~~java
+try {
+            System.out.println(3/num);
+        }catch (Exception e){
+            System.out.println("出错了");
+        }
+        System.out.println(1);
+~~~
 
 
 
