@@ -726,9 +726,49 @@ File类的操作还有很多，这里不一一列举，可以查看API文档了�
 
 ### 4.3字节流
 
+字节抽象类 InputStream ：字节输⼊流 ，可理解为把数据读入Java内
 
+public int read(){}。
 
+ public int read(byte[] b){}。
 
+ public int read(byte[] b,int off,int len){}。
+
+ OutputStream ：字节输出流 ，可理解为把数据从java中写成文档
+
+public void write(int n){}。 
+
+public void write(byte[] b){}。 
+
+public void write(byte[] b,int off,int len){}。 
+
+可看实例
+
+~~~java
+ public static void main(String[] args) {
+        copy("D:/IO/text.txt","D:/IO/copytext.txt");
+    }
+    static void copy(String src,String dest) {
+
+        try (
+            InputStream input = new FileInputStream(src);
+            OutputStream output = new FileOutputStream(dest);
+        )
+            {
+            byte[] b = new byte[1024];
+            int len;
+            while ((len = input.read(b)) != -1) {
+                output.write(b, 0, len);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+~~~
+
+IO流多余不再赘述。
 
 
 
