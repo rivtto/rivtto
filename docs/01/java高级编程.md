@@ -768,7 +768,453 @@ public void write(byte[] b,int off,int len){}。
     }
 ~~~
 
-IO流多余不再赘述。
+### 4.4序列化IO
+
+```
+序列化，就是把一个引用类型，拆分成最小的单位(byte)，以便今后数据字节流的形式存储在磁盘中或者是通过网络协议发送另一方，它是数据存储和发送的一种重要技术
+```
+
+```
+ public static void main(String[] args) {
+//        Person[] arr = new Person[]{new Person("a"), new Person("b"), new Person("c"),};
+//
+//        change(arr);
+        Person p1 = new Person("Jack");
+        System.out.println(p1.hashCode());
+        serializable(p1);
+
+        unSerializable();
+    }
+
+    // 建一个对象的数据拆分成字节，有序的写入到文件中去
+    private static void serializable(Person p1) {
+        Path path = Paths.get("c:/Users/ThinkAboutAI/Desktop/person.data");
+        try ( // 只要实现了Closeable接口的实例都会自动关闭
+              OutputStream out = Files.newOutputStream(path);
+              ObjectOutputStream oos = new ObjectOutputStream(out)
+        ) {
+            oos.writeObject(p1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void unSerializable() {
+        try (
+                ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(Paths.get("c:/Users/ThinkAboutAI/Desktop/person.data")))
+        ) {
+            Object obj = ois.readObject();
+            if (obj instanceof Person) {
+                Person person = (Person) obj;
+                System.out.println(person.hashCode());
+                System.out.println(person);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void change(Person[] arr) {
+        arr[0].name = "x";
+    }
+
+
+}
+
+/**
+ * <p>需要被序列化的类一定要实现java.io.Serializable接口：因为ObjectOutputStream在序列化的时候，会有一个类型检测</p>
+ * <p>serialVersionUID相当于一个防伪编码，作用是为了在序列化与反序列化的过程中，预防有人篡改字节码中的信息</p>
+ */
+class Person implements Serializable {
+
+    private static final long serialVersionUID = 2263583963027808782L; // 声明这个类的实例是可以被序列化的
+
+    // JVM在反序列化的时候，会去识别这个“防伪编码”，作用有点类似于MD5校验
+//    private static final long serialVersionUID = 1L;
+
+    String name;
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                '}';
+    }
+
+    public Person(String name) {
+        this.name = name;
+    }
+```
+
+IO知识点理解过程即可，后续开发将会使用各种框架代替。这里只列举少许示例。
+
+## 5、网络编程
+
+后续开发同样会用框架代替，知识了解、代码理解即可
+
+### 5.1网络
+
+在学习Java网络编程之前，我们先来了解什么是计算机网络。
+
+计算机网络是指两台或更多的计算机组成的网络，在同一个网络中，任意两台计算机都可以直接通信，因为所有计算机都需要遵循同一种网络协议。
+
+那什么是互联网呢？互联网是网络的网络（internet），即把很多计算机网络连接起来，形成一个全球统一的互联网。
+
+对某个特定的计算机网络来说，它可能使用网络协议ABC，而另一个计算机网络可能使用网络协议XYZ。如果计算机网络各自的通讯协议不统一，就没法把不同的网络连接起来形成互联网。因此，为了把计算机网络接入互联网，就必须使用TCP/IP协议。
+
+TCP/IP协议泛指互联网协议，其中最重要的两个协议是TCP协议和IP协议。只有使用TCP/IP协议的计算机才能够联入互联网，使用其他网络协议（例如NetBIOS、AppleTalk协议等）是无法联入互联网的。
+
+### 5.2 IP地址
+
+在互联网中，一个IP地址用于唯一标识一个网络接口（Network Interface）。一台联入互联网的计算机肯定有一个IP地址，但也可能有多个IP地址。
+
+IP地址分为IPv4和IPv6两种。IPv4采用32位地址，类似`101.202.99.12`，而IPv6采用128位地址，类似`2001:0DA8:100A:0000:0000:1020:F2F3:1428`。IPv4地址总共有2^32个（大约42亿），而IPv6地址则总共有2^128个（大约340万亿亿亿亿），IPv4的地址目前已耗尽，而IPv6的地址是根本用不完的。
+
+IP地址又分为公网IP地址和内网IP地址。公网IP地址可以直接被访问，内网IP地址只能在内网访问。内网IP地址类似于：
+
+- 192.168.x.x
+- 10.x.x.x
+
+有一个特殊的IP地址，称之为本机地址，它总是`127.0.0.1`。
+
+IPv4地址实际上是一个32位整数。例如：
+
+```ascii
+106717964 = 0x65ca630c
+          = 65  ca  63 0c
+          = 101.202.99.12
+```
+
+如果一台计算机只有一个网卡，并且接入了网络，那么，它有一个本机地址`127.0.0.1`，还有一个IP地址，例如`101.202.99.12`，可以通过这个IP地址接入网络。
+
+如果一台计算机有两块网卡，那么除了本机地址，它可以有两个IP地址，可以分别接入两个网络。通常连接两个网络的设备是路由器或者交换机，它至少有两个IP地址，分别接入不同的网络，让网络之间连接起来。
+
+如果两台计算机位于同一个网络，那么他们之间可以直接通信，因为他们的IP地址前段是相同的，也就是网络号是相同的。网络号是IP地址通过子网掩码过滤后得到的。例如：
+
+某台计算机的IP是`101.202.99.2`，子网掩码是`255.255.255.0`，那么计算该计算机的网络号是：
+
+```
+IP = 101.202.99.2
+Mask = 255.255.255.0
+Network = IP & Mask = 101.202.99.0
+```
+
+每台计算机都需要正确配置IP地址和子网掩码，根据这两个就可以计算网络号，如果两台计算机计算出的网络号相同，说明两台计算机在同一个网络，可以直接通信。如果两台计算机计算出的网络号不同，那么两台计算机不在同一个网络，不能直接通信，它们之间必须通过路由器或者交换机这样的网络设备间接通信，我们把这种设备称为网关。
+
+网关的作用就是连接多个网络，负责把来自一个网络的数据包发到另一个网络，这个过程叫路由。
+
+所以，一台计算机的一个网卡会有3个关键配置：
+
+![image-20210817130832261](D:\桌面\rivtto\docs\01\插图\image-20210817130832261.png)
+
+- IP地址，例如：`10.0.2.15`
+- 子网掩码，例如：`255.255.255.0`
+- 网关的IP地址，例如：`10.0.2.2`
+
+### 5.3 域名
+
+因为直接记忆IP地址非常困难，所以我们通常使用域名访问某个特定的服务。域名解析服务器DNS负责把域名翻译成对应的IP，客户端再根据IP地址访问服务器。
+
+用`nslookup`可以查看域名对应的IP地址：
+
+```
+$ nslookup baidu.com
+Server:  xxx.xxx.xxx.xxx
+Address: xxx.xxx.xxx.xxx#53
+
+Non-authoritative answer:
+Name:    www.baidu.com
+Address: 47.99.33.223
+```
+
+有一个特殊的本机域名`localhost`，它对应的IP地址总是本机地址`127.0.0.1`。
+
+### 5.4 网络模型
+
+由于计算机网络从底层的传输到高层的软件设计十分复杂，要合理地设计计算机网络模型，必须采用分层模型，每一层负责处理自己的操作。OSI（Open System Interconnect）网络模型是ISO组织定义的一个计算机互联的标准模型，注意它只是一个定义，目的是为了简化网络各层的操作，提供标准接口便于实现和维护。这个模型从上到下依次是：
+
+- 应用层，提供应用程序之间的通信；
+- 表示层：处理数据格式，加解密等等；
+- 会话层：负责建立和维护会话；
+- 传输层：负责提供端到端的可靠传输；
+- 网络层：负责根据目标地址选择路由来传输数据；
+- 链路层和物理层：负责把数据进行分片并且真正通过物理网络传输，例如，无线网、光纤等。
+
+互联网实际使用的TCP/IP模型并不是对应到OSI的7层模型，而是大致对应OSI的5层模型：
+
+| OSI    | TCP/IP     |
+| :----- | :--------- |
+| 应用层 | 应用层     |
+| 表示层 |            |
+| 会话层 |            |
+| 传输层 | 传输层     |
+| 网络层 | IP层       |
+| 链路层 | 网络接口层 |
+| 物理层 |            |
+
+### 5.5 常用协议
+
+IP协议是一个分组交换，它不保证可靠传输。而TCP协议是传输控制协议，它是面向连接的协议，支持可靠传输和双向通信。TCP协议是建立在IP协议之上的，简单地说，IP协议只负责发数据包，不保证顺序和正确性，而TCP协议负责控制数据包传输，它在传输数据之前需要先建立连接，建立连接后才能传输数据，传输完后还需要断开连接。TCP协议之所以能保证数据的可靠传输，是通过接收确认、超时重传这些机制实现的。并且，TCP协议允许双向通信，即通信双方可以同时发送和接收数据。
+
+TCP协议也是应用最广泛的协议，许多高级协议都是建立在TCP协议之上的，例如HTTP、SMTP等。
+
+UDP协议（User Datagram Protocol）是一种数据报文协议，它是无连接协议，不保证可靠传输。因为UDP协议在通信前不需要建立连接，因此它的传输效率比TCP高，而且UDP协议比TCP协议要简单得多。
+
+选择UDP协议时，传输的数据通常是能容忍丢失的，例如，一些语音视频通信的应用会选择UDP协议。
+
+### 5.6TCP/IP协议编程
+
+~~~java
+public class Client {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        try (
+                Socket socket = new Socket(InetAddress.getByName("127.0.0.1"),8080);
+                OutputStream ops =socket.getOutputStream()
+        ){
+            System.out.println("开始：");
+            while (!(sc.nextLine().equals("q"))){
+                String msg = sc.nextLine();
+                System.out.println("说些什么:");
+                ops.write(msg.getBytes());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+public class ServerProgram {
+    public static void main(String[] args) {
+        try (
+                ServerSocket ss = new ServerSocket(8080);
+                Socket socket = ss.accept();
+                InputStream ins =socket.getInputStream();
+        ) {
+            byte[] b = new byte[1024];
+            int len ;
+            while ((len = ins.read(b)) != -1){
+                String msg =new String(b,0,len);
+                System.out.println(msg);
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+}
+// Internet P：每一台硬件（能接入网络的）在网络上的一个唯一地址标识，其它设备能直接通过IP来对该设备发起连接请求
+    // Port：端口，这个是为了区分不同的应用程序如何来接受网络数据包
+
+    // Transform verb. 传输
+    // Control 控制
+    // Protocol 协议
+
+    // 基于双工的网络传输协议
+    // 在连接的时候，双方都会有一些前置的交互：你在吗？我在？我能向你发送数据吗？可以？现在可以发送了吗？可以了
+    // 因此，这个连接一旦创建好以后，发送的数据，在数据帧上是顺序准确的、数据一定是完整的（丢包）
+    // 相对其它的通讯协议来说，发送的效率较慢
+    // 连接的两方，是有主次之分的，分为服务器方和客户端方
+~~~
+
+### 6.7UDP编程
+
+```
+public class Receiver {
+    public static void main(String[] args) {
+        // 创建数据报文的socket
+        try (
+                DatagramSocket ds = new DatagramSocket(8080);
+        ) {
+            byte[] buffer = new byte[1024]; // 1kb
+            // 真正用来盛放数据的数据包裹
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
+            // 当buffer被接收的数据填充满的时候，就会return
+            ds.receive(dp); // 当没有接收到消息的时候，会一直阻塞
+
+            // 服务器端是可以获取到客户端的地址信息
+//            dp.getAddress(); // 获取对方IP
+//            dp.getPort(); // 获取端口
+
+            int len = dp.getLength(); // 真正的接收到数据的长度
+            byte[] data = dp.getData(); // 它的长度与buffer的长度是一样
+            String msg = new String(data, 0, len);
+            System.out.println(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+public class Sender {
+    public static void main(String[] args) {
+        try (
+                DatagramSocket socket = new DatagramSocket()
+        ) {
+            byte[] msg = "hello world".getBytes();
+            // 在发送的数据报文中，封装目标的地址信息
+            DatagramPacket dp = new DatagramPacket(msg, msg.length, InetAddress.getByName("127.0.0.1"), 8080);
+            // while
+            socket.send(dp);
+
+            // 发送的数据传输完毕的时候，发送一个类似于Q的表示
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+```
+
+## 6、多线程
+
+### 6.1进程与线程与cpu
+
+进程：进程是程序运行的实例，程序是由一个或者多个进程组成，进程包含该程序的资源和数据，并且占据一定的内存空间。操作系统可以同时进行多个进程。
+
+线程：指的是由多个指令组成的一条序列，可以理解为是进程中的一条指令序列，多个线程可以同时处理（实际上还是一次一个，只是交替速度很快）
+
+CPU：是电脑的“大脑”，所有指令由他处理，才可以继续运行，但是一次只能处理一个，每次处理很短的时间，就会换成下一个程序，以此循环，交替速度非常快，在使用者看来，就是程序同时运行，线程会争夺cpu的处理时间片。
+
+
+
+### 6.2线程的操作
+
+#### 6.2.1创建
+
+线程的创建有（常用）两种方法（也可以说3种，第三种是第二种的lambda表达式拓展）。
+
+PS：所有的线程都是由Thread类启动。
+
+一是继承Thread类，重写run方法
+
+~~~java
+lass MyThread extends Thread{
+    public void run(){
+        for (int i = 0; i < 50; i++) {
+            System.out.println(Thread.currentThread().getName()+"-"+i);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+   public static void main(String[] args) {
+        MyThread mt = new MyThread();
+        mt.start();
+~~~
+
+start方法表示启动线程。
+
+
+
+二是实现Runnable接口，实现run方法：、
+
+~~~java
+class MyRunnable implements Runnable{
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 50; i++) {
+            System.out.println(Thread.currentThread().getName()+"-"+i);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+ MyRunnable mt2 = new MyRunnable();
+        Thread td = new Thread(mt2);
+        td.start();
+~~~
+
+由以上代码可见，最后的代码运行，还是由Thread类实现，实例化Thread对象时，传入一个实现Runnable接口的对象参数。
+
+
+
+方法的选择：一般我们使用第二种方式，因为第一种方式是继承关系，而java中只能单根继承，从而会使得代码复用性降低。所以实现Runnable接口，更加灵活。
+
+
+
+#### 6.2.2线程的暂停(休眠)
+
+当我们需要当前线程停下一段时间，或者需要等待其他线程先结束时，我们就需要手动暂停一下该线程，我们用Thread.sleep    来实现该线程的暂停（休眠）
+
+~~~java
+ try {
+                Thread.sleep(100);//表示休眠100毫秒
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+~~~
+
+因为休眠方法声明在JDK里面有抛出异常标识，所以我们需要处理一下。
+
+#### 6.2.3join方法
+
+join可以译为等待加入的意思，是指在某一条线程调用另一条线程的join方法，那么该线程就会等待加入的方法执行完毕。
+
+例如:我们在main方法中加入t.join , 那么main方法必须等到t线程执行结束才会执行后续语句。
+
+~~~java
+public class ThreadJoin {
+    public static void main(String[] args) {
+        Thread t = new Thread(new ThreadJoin);
+        System.out.println("开始");
+        t.start;
+        t.join;
+        System.out.println("结束");
+
+class ThreadJoin3 implements Runnable{
+    public void run(){
+        for (int i = 0; i < 50; i++) {
+            System.out.println(Thread.currentThread().getName()+"--"+i);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+~~~
+
+运行以上代码，我们会发现t线程结束，才会打印出结束二字，但是如果没有t.join，那么t线程还没有运行完，主线程就已经结束了，但是t线程也被迫结束。
+
+此例我们可以详细了解join方法的用处。
+
+同时我们会发现join方法中可以传入参数，这个参数是等待时间，以刚才的例子解释
+
+就是t.join（300）,就是主线程等待t线程300毫秒。
+
+
+
+
+
+#### 6.2.4interrupt方法
+
+当线程执行过程中，需要停止线程时即可
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
